@@ -36,7 +36,7 @@ module vscode =
         abstract offsetAt: position: Position -> float
         abstract positionAt: offset: float -> Position
         abstract getText: ?range: Range -> string
-        abstract getWordRangeAtPosition: position: Position * ?regex: Regex -> U2<Range, unit>
+        abstract getWordRangeAtPosition: position: Position * ?regex: Regex -> Range option
         abstract validateRange: range: Range -> Range
         abstract validatePosition: position: Position -> Position
 
@@ -61,7 +61,7 @@ module vscode =
         member __.isSingleLine with get(): bool = jsNative and set(v: bool): unit = jsNative
         member __.contains(positionOrRange: U2<Position, Range>): bool = jsNative
         member __.isEqual(other: Range): bool = jsNative
-        member __.intersection(range: Range): U2<Range, unit> = jsNative
+        member __.intersection(range: Range): Range option = jsNative
         member __.union(other: Range): Range = jsNative
         member __.``with``(?start: Position, ?``end``: Position): Range = jsNative
         member __.``with``(change: obj): Range = jsNative
@@ -549,10 +549,10 @@ module vscode =
 
     and WorkspaceConfiguration =
         [<Emit("$0[$1]{{=$2}}")>] abstract Item: key: string -> obj with get, set
-        abstract get: section: string -> U2<'T, unit>
+        abstract get: section: string -> 'T option
         abstract get: section: string * defaultValue: 'T -> 'T
         abstract has: section: string -> bool
-        abstract inspect: section: string -> U2<obj, unit>
+        abstract inspect: section: string -> obj option
         abstract update: section: string * value: obj * ?``global``: bool -> PromiseLike<unit>
 
     and [<Import("Location","vscode")>] Location(uri: Uri, rangeOrPosition: U2<Range, Position>) =
@@ -574,12 +574,12 @@ module vscode =
 
     and DiagnosticCollection =
         abstract name: string with get, set
-        abstract set: uri: Uri * diagnostics: U2<ResizeArray<Diagnostic>, unit> -> unit
-        abstract set: entries: ResizeArray<Uri * U2<ResizeArray<Diagnostic>, unit>> -> unit
+        abstract set: uri: Uri * diagnostics: ResizeArray<Diagnostic> option -> unit
+        abstract set: entries: ResizeArray<Uri * ResizeArray<Diagnostic> option> -> unit
         abstract delete: uri: Uri -> unit
         abstract clear: unit -> unit
         abstract forEach: callback: Func<Uri, ResizeArray<Diagnostic>, DiagnosticCollection, obj> * ?thisArg: obj -> unit
-        abstract get: uri: Uri -> U2<ResizeArray<Diagnostic>, unit>
+        abstract get: uri: Uri -> ResizeArray<Diagnostic> option
         abstract has: uri: Uri -> bool
         abstract dispose: unit -> unit
 
@@ -606,9 +606,9 @@ module vscode =
         abstract alignment: StatusBarAlignment with get, set
         abstract priority: float with get, set
         abstract text: string with get, set
-        abstract tooltip: U2<string, unit> with get, set
-        abstract color: U2<string, unit> with get, set
-        abstract command: U2<string, unit> with get, set
+        abstract tooltip: string option with get, set
+        abstract color: string option with get, set
+        abstract command: string option with get, set
         abstract show: unit -> unit
         abstract hide: unit -> unit
         abstract dispose: unit -> unit
@@ -637,11 +637,11 @@ module vscode =
         abstract workspaceState: Memento with get, set
         abstract globalState: Memento with get, set
         abstract extensionPath: string with get, set
-        abstract storagePath: U2<string, unit> with get, set
+        abstract storagePath: string option with get, set
         abstract asAbsolutePath: relativePath: string -> string
 
     and Memento =
-        abstract get: key: string -> U2<'T, unit>
+        abstract get: key: string -> 'T option
         abstract get: key: string * defaultValue: 'T -> 'T
         abstract update: key: string * value: obj -> PromiseLike<unit>
 
@@ -728,11 +728,11 @@ module vscode =
     type [<Import("commands","vscode")>] commands =
         static member registerCommand(command: string, callback: Func<obj, obj>, ?thisArg: obj): Disposable = jsNative
         static member registerTextEditorCommand(command: string, callback: Func<TextEditor, TextEditorEdit, obj, unit>, ?thisArg: obj): Disposable = jsNative
-        static member executeCommand(command: string, [<ParamArray>] rest: obj[]): PromiseLike<U2<'T, unit>> = jsNative
+        static member executeCommand(command: string, [<ParamArray>] rest: obj[]): PromiseLike<'T option> = jsNative
         static member getCommands(?filterInternal: bool): PromiseLike<ResizeArray<string>> = jsNative
 
     type [<Import("window","vscode")>] window =
-        static member activeTextEditor with get(): U2<TextEditor, unit> = jsNative and set(v: U2<TextEditor, unit>): unit = jsNative
+        static member activeTextEditor with get(): TextEditor option = jsNative and set(v: TextEditor option): unit = jsNative
         static member visibleTextEditors with get(): ResizeArray<TextEditor> = jsNative and set(v: ResizeArray<TextEditor>): unit = jsNative
         static member onDidChangeActiveTextEditor with get(): Event<TextEditor> = jsNative and set(v: Event<TextEditor>): unit = jsNative
         static member onDidChangeVisibleTextEditors with get(): Event<ResizeArray<TextEditor>> = jsNative and set(v: Event<ResizeArray<TextEditor>>): unit = jsNative
@@ -743,21 +743,21 @@ module vscode =
         static member showTextDocument(document: TextDocument, ?column: ViewColumn, ?preserveFocus: bool): PromiseLike<TextEditor> = jsNative
         static member showTextDocument(document: TextDocument, ?options: TextDocumentShowOptions): PromiseLike<TextEditor> = jsNative
         static member createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType = jsNative
-        static member showInformationMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showInformationMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showInformationMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showInformationMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showWarningMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showWarningMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showWarningMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showWarningMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showErrorMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showErrorMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<U2<string, unit>> = jsNative
-        static member showErrorMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showErrorMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<U2<'T, unit>> = jsNative
-        static member showQuickPick(items: U2<ResizeArray<string>, PromiseLike<ResizeArray<string>>>, ?options: QuickPickOptions, ?token: CancellationToken): PromiseLike<U2<string, unit>> = jsNative
-        static member showQuickPick(items: U2<ResizeArray<'T>, PromiseLike<ResizeArray<'T>>>, ?options: QuickPickOptions, ?token: CancellationToken): PromiseLike<U2<'T, unit>> = jsNative
-        static member showInputBox(?options: InputBoxOptions, ?token: CancellationToken): PromiseLike<U2<string, unit>> = jsNative
+        static member showInformationMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showInformationMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showInformationMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showInformationMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showWarningMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showWarningMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showWarningMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showWarningMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showErrorMessage(message: string, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showErrorMessage(message: string, options: MessageOptions, [<ParamArray>] items: string[]): PromiseLike<string option> = jsNative
+        static member showErrorMessage(message: string, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showErrorMessage(message: string, options: MessageOptions, [<ParamArray>] items: 'T[]): PromiseLike<'T option> = jsNative
+        static member showQuickPick(items: U2<ResizeArray<string>, PromiseLike<ResizeArray<string>>>, ?options: QuickPickOptions, ?token: CancellationToken): PromiseLike<string option> = jsNative
+        static member showQuickPick(items: U2<ResizeArray<'T>, PromiseLike<ResizeArray<'T>>>, ?options: QuickPickOptions, ?token: CancellationToken): PromiseLike<'T option> = jsNative
+        static member showInputBox(?options: InputBoxOptions, ?token: CancellationToken): PromiseLike<string option> = jsNative
         static member createOutputChannel(name: string): OutputChannel = jsNative
         static member setStatusBarMessage(text: string, hideAfterTimeout: float): Disposable = jsNative
         static member setStatusBarMessage(text: string, hideWhenDone: PromiseLike<obj>): Disposable = jsNative
@@ -769,7 +769,7 @@ module vscode =
         static member createTerminal(options: TerminalOptions): Terminal = jsNative
 
     type [<Import("workspace","vscode")>] workspace =
-        static member rootPath with get(): U2<string, unit> = jsNative and set(v: U2<string, unit>): unit = jsNative
+        static member rootPath with get(): string option = jsNative and set(v: string option): unit = jsNative
         static member textDocuments with get(): ResizeArray<TextDocument> = jsNative and set(v: ResizeArray<TextDocument>): unit = jsNative
         static member onDidOpenTextDocument with get(): Event<TextDocument> = jsNative and set(v: Event<TextDocument>): unit = jsNative
         static member onDidCloseTextDocument with get(): Event<TextDocument> = jsNative and set(v: Event<TextDocument>): unit = jsNative
@@ -817,5 +817,5 @@ module vscode =
 
     type [<Import("extensions","vscode")>] extensions =
         static member all with get(): ResizeArray<Extension<obj>> = jsNative and set(v: ResizeArray<Extension<obj>>): unit = jsNative
-        static member getExtension(extensionId: string): U2<Extension<obj>, unit> = jsNative
-        static member getExtension(extensionId: string): U2<Extension<'T>, unit > = jsNative
+        static member getExtension(extensionId: string): Extension<obj> option = jsNative
+        static member getExtension(extensionId: string): Extension<'T> option = jsNative
