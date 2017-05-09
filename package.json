@@ -1,6 +1,6 @@
 {
   "name": "fable-import-vscode",
-  "version": "0.1.0-narumi-1",
+  "version": "0.1.0-narumi-2",
   "description": "Fable bindings for Visual Studio Code",
   "scripts": {
     "build": "node build"
